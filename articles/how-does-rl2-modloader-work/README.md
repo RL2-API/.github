@@ -25,15 +25,37 @@ The second one of the important JSON files is `RuntimeInitializeOnLoads.json`. I
 
 Here we add information about RL2.ModLoader's entrypoint - the name of the assembly, the namespace, the class, and the `static void` method that will execute our loading logic. We set `isUnityClass` to false (logically), and `loadTypes` to 2, which is equal to `RuntimeInitializeLoadType.AfterAssembliesLoaded`.
 
-This mirrors the attribute with which the `ModLoader.Initialize` method is marked.
-```cpp
-[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
-public static void Initialize() { }
-```
-
-This makes the Unity engine call the method, beginning the mod loading cycle.
+This makes the Unity engine call the method at application startup, beginning the mod loading cycle.
 
 ## Loading mods
 The `ModLoader.Initialize` method looks like this.
 
 ![ModLoader.Initialize](https://raw.githubusercontent.com/RL2-API/.github/refs/heads/main/articles/how-does-rl2-modloader-work/3.png)
+
+It invokes several methods, which we will go through now.
+
+### 1.`EnsureModsDirectoryExists`
+Self explanatory. We check whether the `GameInstallation/Rogue Legacy 2_Data/Mods` directory exists, and creates it if it doesn't.
+
+![ModLoader.EnsureModsDirectoryExists](https://raw.githubusercontent.com/RL2-API/.github/refs/heads/main/articles/how-does-rl2-modloader-work/4.png)
+
+### 2. `CommandManager.RegisterCommands`
+This method registers the command from the provided assembly. Here we pass in the current executing one, which is the RL2.ModLoader assembly. This works by scanning the assembly for any `static` methods with return type of `void` marked with the `[Command("name")]` attribute, and [adding them to the registered commands list](https://github.com/RL2-API/RL2.ModLoader/blob/main/RL2.ModLoader/Console/CommandManager.cs#L22).
+
+This loads the two [built-in commands](https://github.com/RL2-API/RL2.ModLoader/blob/main/RL2.ModLoader/BuiltinCommands.cs):
+
+![ModLoader.BuiltinCommands](https://raw.githubusercontent.com/RL2-API/.github/refs/heads/main/articles/how-does-rl2-modloader-work/5.png)
+
+### 3. `CreateModList`
+This method is very straight forward. It ensures the `enabled.json` file exists and isn't malformed, and then proceeds to load it, creating an instance of the `ModList` class:
+
+![ModList](https://raw.githubusercontent.com/RL2-API/.github/refs/heads/main/articles/how-does-rl2-modloader-work/6.png)
+
+This object will be used in a further step.
+
+### 4. `LoadModManifests`
+In this step we search the previously created `Mods` directory for `.mod.json` files, and create `ModManifest` class instances...
+
+![ModManifest](https://raw.githubusercontent.com/RL2-API/.github/refs/heads/main/articles/how-does-rl2-modloader-work/7.png)
+
+... from each file we find, and add them to a list, including their path, for analysis and loading in the next step.
