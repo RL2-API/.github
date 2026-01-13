@@ -1,5 +1,5 @@
 # RL2.API
-This organisation was made to create and maintain custom modding tools for Rogue Legacy 2.
+This organisation was made to create and maintain custom modding tools for Rogue Legacy 2 and other games created by [Cellar Door Games](https://cellardoorgames.com).
 
 # Members
 - TacoConKvass
